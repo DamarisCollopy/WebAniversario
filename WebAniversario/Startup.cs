@@ -29,10 +29,18 @@ namespace WebAniversario
 
             services.AddDbContext<WebAniversarioContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("WebAniversarioContext")));
+
+            //Para o serviço de injeção de dependência do ASP.NET Core funcionar,
+            //é necessário registrar a nova classe, isto é, DataService, no contêiner de injeção de dependências.
+            // Foi realizado registro chamando um método que adiciona uma instância,
+            //a qual queremos que exista somente enquanto os objetos que a utilizarem estiverem ativos. 
+            //Este método é AddTransient, que significa adicionar uma instância temporária, nesse caso para criar o banco de dados caso esse nao exista.
+            // Normalmente, trabalhamos com interfaces para a injeção de independência, criei uma interface a partir da classe DataService
+            services.AddTransient<IDataService, DataService>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        // IserviceProvider interface do asp.net para injetar a dependencia - para gerar uma tabela caso ela ainda nao exista
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -57,6 +65,9 @@ namespace WebAniversario
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            //Para não poluirmos a classe Startup, foi criado uma classe DataService e dentro dela o metodo InicializaDB
+            serviceProvider.GetService<IDataService>().InicializaDB();
         }
     }
 }
+
