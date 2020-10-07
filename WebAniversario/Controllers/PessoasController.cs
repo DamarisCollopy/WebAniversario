@@ -7,75 +7,49 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebAniversario.Data;
 using WebAniversario.Models;
+using WebAniversario.Repository;
 
 namespace WebAniversario.Controllers
 {
     public class PessoasController : Controller
     {
+        private readonly IPessoaRepository pessoaRepository;
         private readonly WebAniversarioContext _context;
-        private static bool IsBeforeNow(DateTime now, DateTime dateTime)
+
+        public PessoasController(IPessoaRepository pessoaRepository, WebAniversarioContext _context)
         {
-            return dateTime.Month < now.Month
-                || (dateTime.Month == now.Month && dateTime.Day < now.Day);
-        }
-        public PessoasController(WebAniversarioContext context)
-        {
-            _context = context;
+            this.pessoaRepository = pessoaRepository;
+            this._context = _context;
         }
 
         [HttpGet]
         public ActionResult Index()
         {
-            var ordenarAniversario = _context.Pessoa.ToList();
-
-            var now = DateTime.Now;
-            var ordenar = from dt in ordenarAniversario
-                          orderby IsBeforeNow(now, dt.DataNascimento), dt.DataNascimento.Month, dt.DataNascimento.Day
-                          select dt;
-
-            return View(ordenar);
+            return View(pessoaRepository.Orden());
         }
         [HttpPost]
         public ActionResult Index(string Nome, string Sobrenome)
         {
-
-            var pesquisa = from m in _context.Pessoa.ToList()
-                           select m;
-
-            if (!String.IsNullOrEmpty(Nome))
-            {
-                pesquisa = pesquisa.Where(s => s.Nome.Contains(Nome) && s.Sobrenome.Contains(Sobrenome));
-            }
-
-            return View(pesquisa);
+            return View(pessoaRepository.Search(Nome,Sobrenome));
         }
         [HttpGet]
         public ActionResult IndexAniversario()
         {
-            DateTime data = DateTime.Now;
-            var pesquisa = from m in _context.Pessoa.ToList()
-                           select m;
-
-            pesquisa = pesquisa.Where(s => ((s.DataNascimento.Month == data.Month) && (s.DataNascimento.Day == data.Day)));
-
-            return View(pesquisa);
+            return View(pessoaRepository.OrdenBirthday());
         }
 
         // GET: Pessoas/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public ActionResult Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-
-            var pessoa = await _context.Pessoa
-                .FirstOrDefaultAsync(m => m.Id == id);
+            Pessoa pessoa = _context.Pessoa.Find(id);
             if (pessoa == null)
             {
                 return NotFound();
             }
-
             return View(pessoa);
         }
 

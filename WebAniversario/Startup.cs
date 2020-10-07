@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using WebAniversario.Data;
+using WebAniversario.Repository;
 
 namespace WebAniversario
 {
@@ -37,6 +38,8 @@ namespace WebAniversario
             //Este método é AddTransient, que significa adicionar uma instância temporária, nesse caso para criar o banco de dados caso esse nao exista.
             // Normalmente, trabalhamos com interfaces para a injeção de independência, criei uma interface a partir da classe DataService
             services.AddTransient<IDataService, DataService>();
+
+            services.AddTransient<IPessoaRepository, PessoaRepository>();
         }
 
         // IserviceProvider interface do asp.net para injetar a dependencia - para gerar uma tabela caso ela ainda nao exista
